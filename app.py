@@ -4,15 +4,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Cargar datos
-file_path = "C:/Users/Usuario/Desktop/Estadisticas DP/estadisticas DP.xlsx"
-data = pd.read_excel(file_path)
+file_path = "estadisticas DP.xlsx"  # Asegúrate de que esta ruta sea correcta
+
+try:
+    data = pd.read_excel(file_path)
+except FileNotFoundError:
+    st.error("El archivo 'estadisticas DP.xlsx' no se encontró. Asegúrate de que esté en el repositorio.")
+    st.stop()  # Detener la ejecución si no se encuentra el archivo
 
 # Limpiar la columna 'Actividad física'
 try:
     data['Actividad física'] = data['Actividad física'].str.strip()  # Eliminar espacios en blanco
     data['Actividad física'] = data['Actividad física'].replace({'No me doy cuenta': 'No realiza', 'Si te das cuenta': 'Sí'})  # Reemplazar valores incorrectos
 except KeyError:
-    st.write("La columna 'Actividad física' no se encontró en los datos.")
+    st.error("La columna 'Actividad física' no se encontró en los datos.")
+    st.stop()  # Detener la ejecución si la columna no existe
 
 # Eliminar columnas que comienzan con "Observaciones"
 data = data.loc[:, ~data.columns.str.startswith('Observaciones')]
@@ -52,10 +58,11 @@ if st.button('Cruzar variables'):
     
     # Aplicar los filtros seleccionados
     for variable, values in selected_values.items():
-        filtered_data = filtered_data[filtered_data[variable].isin(values)]
-        subtotal = len(filtered_data)
-        subtotal_porcentaje = (subtotal / total_inicial) * 100
-        resultados.append((f"{variable}: {', '.join(values)}", subtotal, subtotal_porcentaje))
+        if values:  # Solo aplicar el filtro si hay valores seleccionados
+            filtered_data = filtered_data[filtered_data[variable].isin(values)]
+            subtotal = len(filtered_data)
+            subtotal_porcentaje = (subtotal / total_inicial) * 100 if total_inicial > 0 else 0
+            resultados.append((f"{variable}: {', '.join(values)}", subtotal, subtotal_porcentaje))
     
     # Crear un DataFrame para los resultados
     resultados_df = pd.DataFrame(resultados, columns=['Descripción', 'Total', '% del Total'])
